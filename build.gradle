@@ -8,6 +8,12 @@ group = 'com.heekng'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '11'
 
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
 repositories {
 	mavenCentral()
 }
@@ -18,6 +24,9 @@ dependencies {
 	testImplementation 'org.springframework.batch:spring-batch-test'
 	// h2 DB
 	runtimeOnly 'com.h2database:h2'
+	// lombok
+	compileOnly 'org.projectlombok:lombok:1.18.24'
+	annotationProcessor 'org.projectlombok:lombok'
 }
 
 tasks.named('test') {

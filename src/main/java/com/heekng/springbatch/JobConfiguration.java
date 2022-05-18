@@ -28,6 +28,7 @@ public class JobConfiguration {
         return jobBuilderFactory.get("job")
                 .start(step1())
                 .next(step2())
+                .next(step3())
                 .build();
     }
 
@@ -62,6 +63,17 @@ public class JobConfiguration {
                     System.out.println("step2 was executed");
                     // 예외 발생시 JobExecution은 FAILED
 //                        throw new RuntimeException("step2 has failed");
+                    return RepeatStatus.FINISHED;
+                })
+                .build();
+    }
+
+    @Bean
+    public Step step3() {
+        return stepBuilderFactory.get("step3")
+                .tasklet((contribution, chunkContext) -> {
+                    System.out.println("step3 was executed");
+//                    throw new RuntimeException(">> step3 has executed");
                     return RepeatStatus.FINISHED;
                 })
                 .build();

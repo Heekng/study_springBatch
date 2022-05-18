@@ -32,4 +32,4 @@ spring:
       driver-class-name: com.mysql.cj.jdbc.Driver
   batch:
     jdbc:
-      initialize-schema: embedded
+      initialize-schema: always

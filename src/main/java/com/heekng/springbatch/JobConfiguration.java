@@ -14,26 +14,28 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @RequiredArgsConstructor
-public class DBJobConfiguration {
+public class JobConfiguration {
 
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
 
     @Bean
-    public Job job2() {
-        return jobBuilderFactory.get("job2")
-                .start(step1_2())
-                .next(step2_2())
+    public Job job() {
+        return jobBuilderFactory.get("job3")
+                .start(step1_3())
+                .next(step2_3())
                 .build();
     }
 
     @Bean
-    public Step step1_2() {
+    public Step step1_3() {
         return stepBuilderFactory.get("step1")
                 .tasklet(new Tasklet() {
                     @Override
                     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
+
                         System.out.println("step1 was executed");
+
                         return RepeatStatus.FINISHED;
                     }
                 })
@@ -41,12 +43,14 @@ public class DBJobConfiguration {
     }
 
     @Bean
-    public Step step2_2() {
+    public Step step2_3() {
         return stepBuilderFactory.get("step2")
                 .tasklet(new Tasklet() {
                     @Override
                     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
+
                         System.out.println("step2 was executed");
+
                         return RepeatStatus.FINISHED;
                     }
                 })

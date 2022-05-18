@@ -21,14 +21,14 @@ public class JobConfiguration {
 
     @Bean
     public Job job() {
-        return jobBuilderFactory.get("job3")
-                .start(step1_3())
-                .next(step2_3())
+        return jobBuilderFactory.get("job")
+                .start(step1())
+                .next(step2())
                 .build();
     }
 
     @Bean
-    public Step step1_3() {
+    public Step step1() {
         return stepBuilderFactory.get("step1")
                 .tasklet(new Tasklet() {
                     @Override
@@ -43,7 +43,7 @@ public class JobConfiguration {
     }
 
     @Bean
-    public Step step2_3() {
+    public Step step2() {
         return stepBuilderFactory.get("step2")
                 .tasklet(new Tasklet() {
                     @Override

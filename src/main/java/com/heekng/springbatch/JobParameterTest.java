@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Date;
 
-@Component
+//@Component
 @RequiredArgsConstructor
 public class JobParameterTest implements ApplicationRunner {
 

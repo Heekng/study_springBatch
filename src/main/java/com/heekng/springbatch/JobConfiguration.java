@@ -40,7 +40,7 @@ public class JobConfiguration {
                     @Override
                     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
 
-                        *//*JobParameters jobParameters = contribution.getStepExecution().getJobExecution().getJobParameters();
+                        JobParameters jobParameters = contribution.getStepExecution().getJobExecution().getJobParameters();
                         String name = jobParameters.getString("name");
                         Long seq = jobParameters.getLong("seq");
                         Date date = jobParameters.getDate("date");

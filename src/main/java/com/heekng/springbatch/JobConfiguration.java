@@ -2,7 +2,6 @@ package com.heekng.springbatch;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Job;
-import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
@@ -17,14 +16,12 @@ public class JobConfiguration {
 
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
-    private final JobExecutionListener jobExecutionListener;
 
     @Bean
     public Job job() {
         return jobBuilderFactory.get("job")
                 .start(step1())
                 .next(step2())
-                .listener(jobExecutionListener)
                 .build();
     }
 
@@ -32,6 +29,7 @@ public class JobConfiguration {
     public Step step1() {
         return stepBuilderFactory.get("step1")
                 .tasklet((contribution, chunkContext) -> {
+                    Thread.sleep(3000);
                     return RepeatStatus.FINISHED;
                 })
                 .build();
@@ -40,9 +38,7 @@ public class JobConfiguration {
     @Bean
     public Step step2() {
         return stepBuilderFactory.get("step2")
-                .tasklet((contribution, chunkContext) -> {
-                    return RepeatStatus.FINISHED;
-                })
+                .tasklet((contribution, chunkContext) -> null)
                 .build();
     }
 

@@ -29,6 +29,8 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	// mysql
 	runtimeOnly 'mysql:mysql-connector-java'
+	// web
+	implementation 'org.springframework.boot:spring-boot-starter-web'
 }
 
 tasks.named('test') {

@@ -33,5 +33,5 @@ spring:
   batch:
     jdbc:
       initialize-schema: always
-#    job:
-#      enabled: false # Job ?? ??? ????.
+    job:
+      enabled: false # Job ?? ??? ????.

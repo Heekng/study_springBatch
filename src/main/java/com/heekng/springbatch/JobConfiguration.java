@@ -25,7 +25,17 @@ public class JobConfiguration {
         return jobBuilderFactory.get("job1")
                 .start(step1())
                 .next(step2())
-                .preventRestart()
+                .incrementer(new CustomJobParametersIncrementer())
+                .build();
+    }
+
+    @Bean
+    public Job job2() {
+        // --job.name=job2
+        return jobBuilderFactory.get("job2")
+                .start(step1())
+                .next(step2())
+                .incrementer(new RunIdIncrementer())
                 .build();
     }
 
@@ -43,7 +53,8 @@ public class JobConfiguration {
     public Step step2() {
         return stepBuilderFactory.get("step2")
                 .tasklet((contribution, chunkContext) -> {
-                    throw new RuntimeException("step2 was failed");
+                    System.out.println("step2 has executed");
+                    return RepeatStatus.FINISHED;
                 })
                 .build();
     }

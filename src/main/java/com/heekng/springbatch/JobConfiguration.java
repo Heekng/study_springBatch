@@ -25,25 +25,6 @@ public class JobConfiguration {
                 .start(step1())
                 .next(step2())
                 .next(step3())
-                .incrementer(new RunIdIncrementer())
-                .validator(new JobParametersValidator() {
-                    @Override
-                    public void validate(JobParameters parameters) throws JobParametersInvalidException {
-
-                    }
-                })
-                .preventRestart()
-                .listener(new JobExecutionListener() {
-                    @Override
-                    public void beforeJob(JobExecution jobExecution) {
-
-                    }
-
-                    @Override
-                    public void afterJob(JobExecution jobExecution) {
-
-                    }
-                })
                 .build();
     }
 
@@ -71,11 +52,6 @@ public class JobConfiguration {
     public Step step3() {
         return stepBuilderFactory.get("step3")
                 .tasklet((contribution, chunkContext) -> {
-                    // chunkContext: 인자
-                    // 배치상태
-                    chunkContext.getStepContext().getStepExecution().setStatus(BatchStatus.FAILED);
-                    // 종료코드
-                    contribution.setExitStatus(ExitStatus.STOPPED);
                     System.out.println("step3 has executed");
                     return RepeatStatus.FINISHED;
                 })

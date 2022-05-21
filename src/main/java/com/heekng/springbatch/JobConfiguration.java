@@ -27,6 +27,7 @@ public class JobConfiguration {
 
     @Bean
     public Job job1() {
+        // --job.name=job1
         return jobBuilderFactory.get("job1")
                 .incrementer(new RunIdIncrementer())
                 .start(taskStep())
@@ -35,6 +36,7 @@ public class JobConfiguration {
 
     @Bean
     public Job job2() {
+        // --job.name=job2
         return jobBuilderFactory.get("job2")
                 .incrementer(new RunIdIncrementer())
                 .start(chunkStep())

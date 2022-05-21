@@ -8,9 +8,12 @@ import org.springframework.batch.core.job.DefaultJobParametersValidator;
 import org.springframework.batch.core.job.builder.FlowBuilder;
 import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.item.*;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
@@ -23,19 +26,10 @@ public class JobConfiguration {
     public Job job1() {
         // --job.name=job1
         return jobBuilderFactory.get("job1")
-                .start(step1())
-                .next(step2())
-                .incrementer(new CustomJobParametersIncrementer())
-                .build();
-    }
-
-    @Bean
-    public Job job2() {
-        // --job.name=job2
-        return jobBuilderFactory.get("job2")
-                .start(step1())
-                .next(step2())
                 .incrementer(new RunIdIncrementer())
+                .start(step1())
+                .next(step2())
+                .next(step3())
                 .build();
     }
 
@@ -52,11 +46,64 @@ public class JobConfiguration {
     @Bean
     public Step step2() {
         return stepBuilderFactory.get("step2")
-                .tasklet((contribution, chunkContext) -> {
-                    System.out.println("step2 has executed");
-                    return RepeatStatus.FINISHED;
+                .<String, String>chunk(3)
+                .reader(new ItemReader<String>() {
+                    @Override
+                    public String read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
+                        return null;
+                    }
+                })
+                .processor(new ItemProcessor<String, String>() {
+                    @Override
+                    public String process(String item) throws Exception {
+                        return null;
+                    }
+                })
+                .writer(new ItemWriter<String>() {
+                    @Override
+                    public void write(List<? extends String> items) throws Exception {
+
+                    }
                 })
                 .build();
+    }
+
+    @Bean
+    public Step step3() {
+        return stepBuilderFactory.get("step3")
+                .partitioner(step1())
+                .gridSize(2)
+                .build();
+    }
+
+    @Bean
+    public Step step4() {
+        return stepBuilderFactory.get("step4")
+                .job(job())
+                .build();
+    }
+
+    @Bean
+    public Step step5() {
+        return stepBuilderFactory.get("step5")
+                .flow(flow())
+                .build();
+    }
+
+    @Bean
+    public Job job() {
+        return this.jobBuilderFactory.get("job")
+                .start(step1())
+                .next(step2())
+                .next(step3())
+                .build();
+    }
+
+    @Bean
+    public Flow flow() {
+        FlowBuilder<Flow> flowBuilder = new FlowBuilder<>("flow");
+        flowBuilder.start(step2()).end();
+        return flowBuilder.build();
     }
 
 }

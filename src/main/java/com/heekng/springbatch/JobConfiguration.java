@@ -4,8 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.batch.core.step.job.DefaultJobParametersExtractor;
+import org.springframework.batch.core.step.job.JobParametersExtractor;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemWriter;
@@ -26,35 +29,61 @@ public class JobConfiguration {
     private final StepBuilderFactory stepBuilderFactory;
 
     @Bean
-    public Job job1() {
-        // --job.name=job1
-        return jobBuilderFactory.get("job1")
-//                .incrementer(new RunIdIncrementer())
-                .start(step1())
+    public Job parentJob() {
+        // --job.name=parentJob
+        return jobBuilderFactory.get("parentJob")
+                .start(jobStep(null))
                 .next(step2())
                 .build();
     }
 
-    public Step step1() {
-        return stepBuilderFactory.get("step1")
-                .tasklet((contribution, chunkContext) -> {
-                    System.out.println("contribution = " + contribution + ", chunkContext = " + chunkContext);
-                    return RepeatStatus.FINISHED;
+    @Bean
+    public Step jobStep(JobLauncher jobLauncher) {
+        return stepBuilderFactory.get("jobStep")
+                .job(childJob())
+                .launcher(jobLauncher)
+                .parametersExtractor(jobParametersExtractor())
+                .listener(new StepExecutionListener() {
+                    @Override
+                    public void beforeStep(StepExecution stepExecution) {
+                        stepExecution.getExecutionContext().putString("name", "user1");
+                    }
+
+                    @Override
+                    public ExitStatus afterStep(StepExecution stepExecution) {
+                        return null;
+                    }
                 })
-                // 이전 실행의 성공여부와 상관없이 실행되게 한다.
-                .allowStartIfComplete(true)
                 .build();
     }
 
+    private JobParametersExtractor jobParametersExtractor() {
+        DefaultJobParametersExtractor extractor = new DefaultJobParametersExtractor();
+        extractor.setKeys(new String[]{"name"});
+        return extractor;
+    }
+
+    @Bean
+    public Job childJob() {
+        return jobBuilderFactory.get("childJob")
+                .start(step1())
+                .build();
+    }
+
+    @Bean
+    public Step step1() {
+        return stepBuilderFactory.get("step1")
+                .tasklet((contribution, chunkContext) -> {
+                    throw new RuntimeException("step1 was failed");
+//                    return RepeatStatus.FINISHED
+                })
+                .build();
+    }
+
+    @Bean
     public Step step2() {
         return stepBuilderFactory.get("step2")
-                .tasklet((contribution, chunkContext) -> {
-                    System.out.println("contribution = " + contribution + ", chunkContext = " + chunkContext);
-                    throw new RuntimeException("step2 failed");
-//                    return RepeatStatus.FINISHED;
-                })
-                // 최대 3번까지 반복 가능하다.
-                .startLimit(3)
+                .tasklet((contribution, chunkContext) -> RepeatStatus.FINISHED)
                 .build();
     }
 

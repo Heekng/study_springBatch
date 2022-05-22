@@ -29,44 +29,16 @@ public class JobConfiguration {
     private final StepBuilderFactory stepBuilderFactory;
 
     @Bean
-    public Job parentJob() {
-        // --job.name=parentJob
-        return jobBuilderFactory.get("parentJob")
-                .start(jobStep(null))
-                .next(step2())
-                .build();
-    }
-
-    @Bean
-    public Step jobStep(JobLauncher jobLauncher) {
-        return stepBuilderFactory.get("jobStep")
-                .job(childJob())
-                .launcher(jobLauncher)
-                .parametersExtractor(jobParametersExtractor())
-                .listener(new StepExecutionListener() {
-                    @Override
-                    public void beforeStep(StepExecution stepExecution) {
-                        stepExecution.getExecutionContext().putString("name", "user1");
-                    }
-
-                    @Override
-                    public ExitStatus afterStep(StepExecution stepExecution) {
-                        return null;
-                    }
-                })
-                .build();
-    }
-
-    private JobParametersExtractor jobParametersExtractor() {
-        DefaultJobParametersExtractor extractor = new DefaultJobParametersExtractor();
-        extractor.setKeys(new String[]{"name"});
-        return extractor;
-    }
-
-    @Bean
-    public Job childJob() {
-        return jobBuilderFactory.get("childJob")
+    public Job batchJob() {
+        // --job.name=batchJob
+        return jobBuilderFactory.get("batchJob")
                 .start(step1())
+                // step1이 성공한다면 step3 실행
+                .on("COMPLETED").to(step3())
+                // step1이 실패한다면 step2 실행
+                .from(step1())
+                .on("FAILED").to(step2())
+                .end()
                 .build();
     }
 
@@ -74,8 +46,9 @@ public class JobConfiguration {
     public Step step1() {
         return stepBuilderFactory.get("step1")
                 .tasklet((contribution, chunkContext) -> {
-                    throw new RuntimeException("step1 was failed");
-//                    return RepeatStatus.FINISHED
+                    System.out.println("step1 has executed");
+//                    throw new RuntimeException("step1 was failed");
+                    return RepeatStatus.FINISHED;
                 })
                 .build();
     }
@@ -83,7 +56,20 @@ public class JobConfiguration {
     @Bean
     public Step step2() {
         return stepBuilderFactory.get("step2")
-                .tasklet((contribution, chunkContext) -> RepeatStatus.FINISHED)
+                .tasklet((contribution, chunkContext) -> {
+                    System.out.println("step2 has executed");
+                    return RepeatStatus.FINISHED;
+                })
+                .build();
+    }
+
+    @Bean
+    public Step step3() {
+        return stepBuilderFactory.get("step3")
+                .tasklet((contribution, chunkContext) -> {
+                    System.out.println("step3 has executed");
+                    return RepeatStatus.FINISHED;
+                })
                 .build();
     }
 

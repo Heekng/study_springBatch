@@ -29,7 +29,7 @@ public class JobConfiguration {
     public Job job1() {
         // --job.name=job1
         return jobBuilderFactory.get("job1")
-                .incrementer(new RunIdIncrementer())
+//                .incrementer(new RunIdIncrementer())
                 .start(step1())
                 .next(step2())
                 .build();
@@ -38,15 +38,23 @@ public class JobConfiguration {
     public Step step1() {
         return stepBuilderFactory.get("step1")
                 .tasklet((contribution, chunkContext) -> {
-
+                    System.out.println("contribution = " + contribution + ", chunkContext = " + chunkContext);
                     return RepeatStatus.FINISHED;
                 })
+                // 이전 실행의 성공여부와 상관없이 실행되게 한다.
+                .allowStartIfComplete(true)
                 .build();
     }
 
     public Step step2() {
         return stepBuilderFactory.get("step2")
-                .tasklet(new CustomTasklet())
+                .tasklet((contribution, chunkContext) -> {
+                    System.out.println("contribution = " + contribution + ", chunkContext = " + chunkContext);
+                    throw new RuntimeException("step2 failed");
+//                    return RepeatStatus.FINISHED;
+                })
+                // 최대 3번까지 반복 가능하다.
+                .startLimit(3)
                 .build();
     }
 

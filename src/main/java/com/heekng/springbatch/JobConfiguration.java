@@ -32,13 +32,13 @@ public class JobConfiguration {
 
     @Bean
     public Flow flow() {
-        FlowBuilder<Flow> flowBuilder = new FlowBuilder<>("flow");
+        FlowBuilder<Flow> builder = new FlowBuilder<>("flow");
 
-        flowBuilder.start(step1())
+        builder.start(step1())
                 .next(step2())
                 .end();
 
-        return flowBuilder.build();
+        return builder.build();
     }
 
     @Bean

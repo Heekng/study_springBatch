@@ -4,21 +4,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
-import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
-import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.batch.core.step.tasklet.Tasklet;
-import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
-import org.springframework.batch.item.support.ListItemReader;
+import org.springframework.batch.item.file.FlatFileItemReader;
+import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
 import org.springframework.batch.repeat.RepeatStatus;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 
@@ -44,24 +39,28 @@ public class ChunkConfiguration {
         return stepBuilderFactory.get("step1")
                 .<String, String>chunk(5)
                 .reader(itemReader())
-                .writer(itemWriter())
+                .writer(new ItemWriter<String>() {
+                    @Override
+                    public void write(List<? extends String> items) throws Exception {
+                        log.warn("items = {}", items);
+                    }
+                })
                 .build();
     }
 
     @Bean
-    public ItemWriter<? super String> itemWriter() {
-        return new CustomItemWriter();
-    }
+    public ItemReader itemReader() {
+        FlatFileItemReader<Customer> itemReader = new FlatFileItemReader<>();
+        itemReader.setResource(new ClassPathResource("/customer.csv"));
 
-    @Bean
-    public CustomItemStreamReader itemReader() {
-        List<String> items = new ArrayList<>(10);
+        DefaultLineMapper<Customer> lineMapper = new DefaultLineMapper<>();
+        lineMapper.setLineTokenizer(new DelimitedLineTokenizer());
+        lineMapper.setFieldSetMapper(new CustomerFieldSetMapper());
 
-        for (int i = 0; i <= 10; i++) {
-            items.add(String.valueOf(i));
-        }
+        itemReader.setLineMapper(lineMapper);
+        itemReader.setLinesToSkip(1);
 
-        return new CustomItemStreamReader(items);
+        return itemReader;
     }
 
     @Bean

@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -41,32 +42,27 @@ public class ChunkConfiguration {
     @Bean
     public Step step1() {
         return stepBuilderFactory.get("step1")
-                .<Customer, Customer>chunk(3)
+                .<String, String>chunk(5)
                 .reader(itemReader())
-                .processor(itemProcessor())
                 .writer(itemWriter())
                 .build();
     }
 
     @Bean
-    public ItemWriter<? super Customer> itemWriter() {
+    public ItemWriter<? super String> itemWriter() {
         return new CustomItemWriter();
     }
 
     @Bean
-    public ItemProcessor<? super Customer, ? extends Customer> itemProcessor() {
-        return new CustomItemProcessor();
+    public CustomItemStreamReader itemReader() {
+        List<String> items = new ArrayList<>(10);
+
+        for (int i = 0; i <= 10; i++) {
+            items.add(String.valueOf(i));
+        }
+
+        return new CustomItemStreamReader(items);
     }
-
-    @Bean
-    public ItemReader<Customer> itemReader() {
-        return new CustomItemReader(Arrays.asList(
-                new Customer("user1"),
-                new Customer("user2"),
-                new Customer("user3")));
-    }
-
-
 
     @Bean
     public Step step2() {

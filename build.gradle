@@ -32,12 +32,10 @@ dependencies {
 	// web
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	// oxm, xstream
-	implementation 'org.springframework:spring-oxm:5.3.7'
-	implementation 'com.thoughtworks.xstream:xstream:1.4.16'
-	/*
+//	implementation 'org.springframework:spring-oxm:5.3.7'
+//	implementation 'com.thoughtworks.xstream:xstream:1.4.16'
 	implementation 'org.springframework:spring-oxm:5.3.20'
 	implementation 'com.thoughtworks.xstream:xstream:1.4.19'
-	 */
 
 }
 

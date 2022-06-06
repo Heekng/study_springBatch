@@ -1,5 +1,10 @@
 package com.heekng.springbatch;
 
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.security.NoTypePermission;
+import com.thoughtworks.xstream.security.NullPermission;
+import com.thoughtworks.xstream.security.PrimitiveTypePermission;
+import com.thoughtworks.xstream.security.TypePermission;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.*;
@@ -66,6 +71,15 @@ public class ChunkConfiguration {
 
         XStreamMarshaller xStreamMarshaller = new XStreamMarshaller();
         xStreamMarshaller.setAliases(aliases);
+        XStream xStream = xStreamMarshaller.getXStream();
+
+//        xStream.allowTypesByWildcard(new String[]{
+//                "com.heekng.springbatch.**"
+//        });
+
+        xStream.allowTypes(new Class[] {
+                Customer.class
+        });
 
         return xStreamMarshaller;
     }

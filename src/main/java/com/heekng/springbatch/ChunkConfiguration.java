@@ -13,6 +13,8 @@ import org.springframework.batch.core.configuration.annotation.StepBuilderFactor
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.item.json.JacksonJsonObjectReader;
+import org.springframework.batch.item.json.builder.JsonItemReaderBuilder;
 import org.springframework.batch.item.xml.builder.StaxEventItemReaderBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -52,36 +54,11 @@ public class ChunkConfiguration {
 
     @Bean
     public ItemReader<? extends Customer> customItemReader() {
-        return new StaxEventItemReaderBuilder<Customer>()
-                .name("statXml")
-                .resource(new ClassPathResource("customer.xml"))
-                .addFragmentRootElements("customer")
-                .unmarshaller(itemUnmarshaller())
+        return new JsonItemReaderBuilder<Customer>()
+                .name("jsonReader")
+                .resource(new ClassPathResource("customer.json"))
+                .jsonObjectReader(new JacksonJsonObjectReader<>(Customer.class))
                 .build();
-    }
-
-    @Bean
-    public Unmarshaller itemUnmarshaller() {
-
-        Map<String, Class<?>> aliases = new HashMap<>();
-        aliases.put("customer", Customer.class);
-        aliases.put("id", Long.class);
-        aliases.put("name", String.class);
-        aliases.put("age", Integer.class);
-
-        XStreamMarshaller xStreamMarshaller = new XStreamMarshaller();
-        xStreamMarshaller.setAliases(aliases);
-        XStream xStream = xStreamMarshaller.getXStream();
-
-//        xStream.allowTypesByWildcard(new String[]{
-//                "com.heekng.springbatch.**"
-//        });
-
-        xStream.allowTypes(new Class[] {
-                Customer.class
-        });
-
-        return xStreamMarshaller;
     }
 
     @Bean

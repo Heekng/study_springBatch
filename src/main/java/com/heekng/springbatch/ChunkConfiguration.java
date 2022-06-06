@@ -11,10 +11,12 @@ import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
+import org.springframework.batch.item.file.transform.Range;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
 
 import java.util.List;
 
@@ -39,12 +41,12 @@ public class ChunkConfiguration {
     @Bean
     public Step step1() {
         return stepBuilderFactory.get("step1")
-                .<String, String>chunk(5)
+                .<String, String>chunk(3)
                 .reader(itemReader())
-                .writer(new ItemWriter<String>() {
+                .writer(new ItemWriter() {
                     @Override
-                    public void write(List<? extends String> items) throws Exception {
-                        log.warn("items = {}", items);
+                    public void write(List items) throws Exception {
+                        items.forEach(item -> log.warn("item = {}", item));
                     }
                 })
                 .build();
@@ -61,15 +63,18 @@ public class ChunkConfiguration {
     }
 
     @Bean
-    public ItemReader itemReader() {
+    public FlatFileItemReader itemReader() {
         return new FlatFileItemReaderBuilder<Customer>()
                 .name("flatFile")
-                .resource(new ClassPathResource("/customer.csv"))
+                .resource(new FileSystemResource("/Users/heekng/heekngCoding/inflean_study/spring-batch/src/main/resources/customer.txt"))
                 .fieldSetMapper(new BeanWrapperFieldSetMapper<>())
                 .targetType(Customer.class)
                 .linesToSkip(1)
-                .delimited().delimiter(",")
-                .names("name", "age", "year")
+                .fixedLength()
+                .addColumns(new Range(1, 5))
+                .addColumns(new Range(6, 9))
+                .addColumns(new Range(10))
+                .names("name", "year", "age")
                 .build();
     }
 

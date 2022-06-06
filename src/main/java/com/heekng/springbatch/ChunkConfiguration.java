@@ -8,6 +8,8 @@ import org.springframework.batch.core.configuration.annotation.StepBuilderFactor
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.file.FlatFileItemReader;
+import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
+import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.context.annotation.Bean;
@@ -49,27 +51,25 @@ public class ChunkConfiguration {
     }
 
     @Bean
-    public ItemReader itemReader() {
-        FlatFileItemReader<Customer> itemReader = new FlatFileItemReader<>();
-        itemReader.setResource(new ClassPathResource("/customer.csv"));
-
-        DefaultLineMapper<Customer> lineMapper = new DefaultLineMapper<>();
-        lineMapper.setLineTokenizer(new DelimitedLineTokenizer());
-        lineMapper.setFieldSetMapper(new CustomerFieldSetMapper());
-
-        itemReader.setLineMapper(lineMapper);
-        itemReader.setLinesToSkip(1);
-
-        return itemReader;
-    }
-
-    @Bean
     public Step step2() {
         return stepBuilderFactory.get("step2")
                 .tasklet((contribution, chunkContext) -> {
                     log.warn("step2 has executed");
                     return RepeatStatus.FINISHED;
                 })
+                .build();
+    }
+
+    @Bean
+    public ItemReader itemReader() {
+        return new FlatFileItemReaderBuilder<Customer>()
+                .name("flatFile")
+                .resource(new ClassPathResource("/customer.csv"))
+                .fieldSetMapper(new BeanWrapperFieldSetMapper<>())
+                .targetType(Customer.class)
+                .linesToSkip(1)
+                .delimited().delimiter(",")
+                .names("name", "age", "year")
                 .build();
     }
 

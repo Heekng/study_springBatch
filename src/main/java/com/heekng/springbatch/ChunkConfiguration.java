@@ -6,8 +6,8 @@ import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
-import org.springframework.batch.item.ItemProcessor;
-import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.item.*;
+import org.springframework.batch.item.adapter.ItemWriterAdapter;
 import org.springframework.batch.item.database.JdbcPagingItemReader;
 import org.springframework.batch.item.database.Order;
 import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
@@ -44,52 +44,30 @@ public class ChunkConfiguration {
     @Bean
     public Step step1() throws Exception {
         return stepBuilderFactory.get("step1")
-                .<Customer, Customer2>chunk(10)
-                .reader(customItemReader())
-                .processor(customItemProcessor())
+                .<String, String>chunk(10)
+                .reader(new ItemReader<String>() {
+                    int i = 0;
+                    @Override
+                    public String read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
+                        i++;
+                        return i > 10 ? null : "item" + i;
+                    }
+                })
                 .writer(customItemWriter())
                 .build();
     }
 
     @Bean
-    public ItemProcessor<? super Customer, ? extends Customer2> customItemProcessor() {
-        return new CustomItemProcessor();
+    public ItemWriter<? super String> customItemWriter() {
+        ItemWriterAdapter<String> writer = new ItemWriterAdapter<>();
+        writer.setTargetObject(customService());
+        writer.setTargetMethod("customWrite");
+        return writer;
     }
 
-
-    @Bean
-    public ItemWriter<? super Customer2> customItemWriter() {
-        return new JpaItemWriterBuilder<Customer2>()
-                .usePersist(true)
-                .entityManagerFactory(entityManagerFactory)
-                .build();
+    private CustomService customService() {
+        return new CustomService();
     }
 
-    @Bean
-    public JdbcPagingItemReader<Customer> customItemReader() {
-        JdbcPagingItemReader<Customer> reader = new JdbcPagingItemReader<>();
-
-        reader.setDataSource(this.dataSource);
-        reader.setFetchSize(10);
-        reader.setRowMapper(new CustomerRowMapper());
-
-        MySqlPagingQueryProvider queryProvider = new MySqlPagingQueryProvider();
-        queryProvider.setSelectClause("id, firstName, lastName, birthdate");
-        queryProvider.setFromClause("from customer");
-        queryProvider.setWhereClause("where firstName like :firstname");
-
-        Map<String, Order> sortKeys = new HashMap<>(1);
-
-        sortKeys.put("id", Order.ASCENDING);
-        queryProvider.setSortKeys(sortKeys);
-        reader.setQueryProvider(queryProvider);
-
-        HashMap<String, Object> parameters = new HashMap<>();
-        parameters.put("firstname", "A%");
-
-        reader.setParameterValues(parameters);
-
-        return reader;
-    }
 
 }

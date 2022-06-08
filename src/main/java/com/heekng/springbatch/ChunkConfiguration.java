@@ -6,14 +6,17 @@ import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.JdbcPagingItemReader;
 import org.springframework.batch.item.database.Order;
 import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
+import org.springframework.batch.item.database.builder.JpaItemWriterBuilder;
 import org.springframework.batch.item.database.support.MySqlPagingQueryProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,6 +30,7 @@ public class ChunkConfiguration {
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
     private final DataSource dataSource;
+    private final EntityManagerFactory entityManagerFactory;
 
     @Bean
     public Job job() throws Exception {
@@ -40,18 +44,24 @@ public class ChunkConfiguration {
     @Bean
     public Step step1() throws Exception {
         return stepBuilderFactory.get("step1")
-                .<Customer, Customer>chunk(10)
+                .<Customer, Customer2>chunk(10)
                 .reader(customItemReader())
+                .processor(customItemProcessor())
                 .writer(customItemWriter())
                 .build();
     }
 
     @Bean
-    public ItemWriter<? super Customer> customItemWriter() {
-        return new JdbcBatchItemWriterBuilder<Customer>()
-                .dataSource(dataSource)
-                .sql("insert into customer2 values (:id, :firstName, :lastName, :birthdate)")
-                .beanMapped()
+    public ItemProcessor<? super Customer, ? extends Customer2> customItemProcessor() {
+        return new CustomItemProcessor();
+    }
+
+
+    @Bean
+    public ItemWriter<? super Customer2> customItemWriter() {
+        return new JpaItemWriterBuilder<Customer2>()
+                .usePersist(true)
+                .entityManagerFactory(entityManagerFactory)
                 .build();
     }
 

@@ -8,14 +8,9 @@ import org.springframework.batch.core.configuration.annotation.StepBuilderFactor
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
-import org.springframework.batch.item.database.Order;
-import org.springframework.batch.item.database.PagingQueryProvider;
-import org.springframework.batch.item.database.builder.JdbcPagingItemReaderBuilder;
-import org.springframework.batch.item.database.builder.JpaPagingItemReaderBuilder;
-import org.springframework.batch.item.database.support.SqlPagingQueryProviderFactoryBean;
+import org.springframework.batch.item.adapter.ItemReaderAdapter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
 
 import javax.persistence.EntityManagerFactory;
 import java.util.HashMap;
@@ -43,28 +38,29 @@ public class ChunkConfiguration {
     @Bean
     public Step step1() throws Exception {
         return stepBuilderFactory.get("step1")
-                .<Customer, Customer>chunk(10)
+                .<String, String>chunk(10)
                 .reader(customItemReader())
                 .writer(customItemWriter())
                 .build();
     }
 
-    @Bean
-    public ItemReader<? extends Customer> customItemReader() throws Exception {
-
-        return new JpaPagingItemReaderBuilder<Customer>()
-                .name("jpaPagingItemReader")
-                .entityManagerFactory(entityManagerFactory)
-                .pageSize(10)
-                .queryString("select c from Customer c join fetch c.address")
-                .build();
-
+    private ItemReader<String> customItemReader() {
+        ItemReaderAdapter<String> reader = new ItemReaderAdapter<>();
+        reader.setTargetObject(customService());
+        reader.setTargetMethod("customRead");
+        return reader;
     }
 
     @Bean
-    public ItemWriter<Customer> customItemWriter() {
+    public Object customService() {
+        return new CustomService();
+    }
+
+
+    @Bean
+    public ItemWriter<String> customItemWriter() {
         return items -> {
-            items.forEach(item -> log.warn(item.getAddress().getLocation()));
+            items.forEach(item -> log.warn(item));
         };
     }
 

@@ -44,6 +44,6 @@ spring:
 #      table-prefix: SYSTEM_ # 테이블 prefix, default: BATCH_
     job:
       names: ${job.name:NONE} # job의 이름을 argument로 바인딩, 없으면 NONE, --job.name=job,job2 name=user1
-#      enabled: false # Job 자동 실행을 막는다., default true
+      enabled: false # Job 자동 실행을 막는다., default true
 #      names: job1 # 배치를 실행할 job의 이름
 
